@@ -93,10 +93,39 @@ Start:
 	ld [rLCDC], a
 
 	call DMA_COPY_IDLE
-	call $FF80
+	call DMA_IDLE_HRAM
 
-.lockup
-	jr .lockup
+	ld a, IEF_VBLANK
+	ld [rIE], a
+
+	ei
+;.lockup
+;	jr .lockup
+
+.game_loop
+	call VBLANK_WAIT
+
+	ld a, [OAM_BUFFER]
+	add 1
+	ld [OAM_BUFFER], a
+
+	call DMA_IDLE_HRAM
+	
+	jp .game_loop
+
+VBLANK_WAIT:
+	ld hl, vblank_period
+.wait
+	halt
+	nop
+	nop
+
+	ld a, 0
+	cp [hl]
+	jr z, .wait
+
+	ld [hl], a
+	ret
 
 DMA_IDLE:
 	ld a, $C1
@@ -107,14 +136,12 @@ DMA_IDLE:
 	dec a
 	jr nz, .next
 	ret
-
 DMA_IDLE_END:
-	
 
 DMA_COPY_IDLE:
-	ld hl, $FF80	; dst
+	ld hl, DMA_IDLE_HRAM	; dst
 	ld de, DMA_IDLE	; iterator 
-	ld bc, DMA_IDLE_END - DMA_IDLE 
+	ld bc, DMA_IDLE_END - DMA_IDLE
 
 .next
 	; copy byte and increment counters
@@ -145,5 +172,15 @@ Section "Hello World string", ROM0
 HelloWorldStr:
 	db "hello, world",0
 
+SECTION "VBLANK IRQ", ROM0[$40]
+	ld a, $1
+	ld [vblank_period], a
+	reti
+
 SECTION "OAM Buffer", WRAM0[$C100]
-OAM_BUFFER: DS 4*40
+OAM_BUFFER: ds 4*40
+vblank_period: ds 1
+
+
+SECTION "DMA Idle Process", HRAM[$FF80]
+DMA_IDLE_HRAM:
