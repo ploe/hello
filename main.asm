@@ -74,6 +74,9 @@ Start:
 	ld a, %11100100
 	ld [rBGP], a
 
+	ld a, %11100100
+	ld [rOBP0], a
+
 	; set screen offset
 	xor a
 	ld [rSCX], a
@@ -87,6 +90,9 @@ Start:
 
 	ld a, 32
 	ld [OAM_BUFFER+1], a
+
+	ld a, 0
+	ld [blob_frame], a
 
 	; turn screen on, show background
 	ld a, %10000011
@@ -104,10 +110,26 @@ Start:
 
 .game_loop
 	call VBLANK_WAIT
+	
+	ld a, [blob_frame]
+	inc a
+	ld [blob_frame], a
+
+	cp a, 15
+	jr nz, .game_loop
+
+	xor a
+	ld [blob_frame], a
 
 	ld a, [OAM_BUFFER]
-	add 1
+	add 4
 	ld [OAM_BUFFER], a
+
+	
+	ld a, [OAM_BUFFER+2]
+	xor a, %11111111
+	xor a, %11111110
+	ld [OAM_BUFFER+2], a
 
 	call DMA_IDLE_HRAM
 	
@@ -164,7 +186,7 @@ INCBIN "font.chr"
 FontTilesEnd:
 
 DAISY_SPRITESHEET:
-INCBIN "daisy.2bpp"
+INCBIN "blob.2bpp"
 DAISY_SPRITESHEET_END:
 
 Section "Hello World string", ROM0
@@ -177,9 +199,10 @@ SECTION "VBLANK IRQ", ROM0[$40]
 	ld [vblank_period], a
 	reti
 
-SECTION "OAM Buffer", WRAM0[$C100]
+SECTION "Work RAM", WRAM0[$C100]
 OAM_BUFFER: ds 4*40
 vblank_period: ds 1
+blob_frame: ds 1
 
 
 SECTION "DMA Idle Process", HRAM[$FF80]
