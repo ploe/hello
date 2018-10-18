@@ -4,7 +4,7 @@ SECTION "Header", ROM0[$100]
 
 EntryPoint:
 	di
-	jp Start
+	jp start
 
 REPT $150 - $104
 	db 0
@@ -12,69 +12,37 @@ ENDR
 
 SECTION "Game code", ROM0
 
-Start:
+start:
+	call init
 
-.waitVBlank
+	call game_loop
+
+init:
+	call screen_init
+
+	call DMA_COPY_IDLE
+	call DMA_IDLE_HRAM
+
+	call blob_new
+
+	call screen_start
+
+screen_init:
+.wait
 	; wait for VBlank
 	ld a, [rLY]
 	cp 144
-	jr c, .waitVBlank
+	jr c, .wait
 
 	; turn off LCDC	
 	xor a
 	ld [rLCDC], a
 
-
-	; initialize copyFont loop
-	ld hl, $9000
-	ld de, FontTiles
-	ld bc, FontTilesEnd - FontTiles
-.copyFont
-	; copy byte and increment counters
-	ld a, [de]
-	ld [hli], a
-	inc de
-	dec bc
-	
-	; loop if count is non-zero
-	ld a, b
-	or c
-	jr nz, .copyFont
-; end of copyFont
-
-	ld hl, $8000
-	ld de, DAISY_SPRITESHEET
-	ld bc, DAISY_SPRITESHEET_END - DAISY_SPRITESHEET
-.copyDaisy
-	; copy byte and increment counters
-	ld a, [de]
-	ld [hli], a
-	inc de
-	dec bc
-	
-	; loop if count is non-zero
-	ld a, b
-	or c
-	jr nz, .copyDaisy
-; end of copyDaisy
-
-
-	; copy string to top left corner
-	ld hl, $9800
-	ld de, HelloWorldStr
-.copyString
-	ld a, [de]
-	ld [hli], a
-	inc de
-	and a
-	jr nz, .copyString
-; end of copy string
-
 	; init background pallete
 	ld a, %11100100
 	ld [rBGP], a
 
-	ld a, %11100100
+	ld a, %11010000
 	ld [rOBP0], a
 
 	; set screen offset
@@ -85,6 +53,22 @@ Start:
 	; turn off the sound
 	ld [rNR52], a
 
+	; turn screen on, show background
+	ld a, %10000011
+	ld [rLCDC], a
+
+	ret
+
+screen_start:
+
+	ld a, IEF_VBLANK
+	ld [rIE], a
+
+	ei
+
+	ret
+
+blob_new:
 	ld a, 24
 	ld [OAM_BUFFER], a
 
@@ -94,21 +78,23 @@ Start:
 	ld a, 0
 	ld [blob_frame], a
 
-	; turn screen on, show background
-	ld a, %10000011
-	ld [rLCDC], a
+	ld hl, $8000
+	ld de, BLOB_SPRITESHEET
+	ld bc, BLOB_SPRITESHEET_END - BLOB_SPRITESHEET
+.next_byte
+	; copy byte and increment counters
+	ld a, [de]
+	ld [hli], a
+	inc de
+	dec bc
+	
+	; loop if count is non-zero
+	ld a, b
+	or c
+	jr nz, .next_byte
+	ret
 
-	call DMA_COPY_IDLE
-	call DMA_IDLE_HRAM
-
-	ld a, IEF_VBLANK
-	ld [rIE], a
-
-	ei
-;.lockup
-;	jr .lockup
-
-.game_loop
+game_loop:
 	call VBLANK_WAIT
 	
 	ld a, [blob_frame]
@@ -116,7 +102,7 @@ Start:
 	ld [blob_frame], a
 
 	cp a, 15
-	jr nz, .game_loop
+	jr nz, game_loop
 
 	xor a
 	ld [blob_frame], a
@@ -127,13 +113,12 @@ Start:
 
 	
 	ld a, [OAM_BUFFER+2]
-	xor a, %11111111
-	xor a, %11111110
+	xor a, %00000001
 	ld [OAM_BUFFER+2], a
 
 	call DMA_IDLE_HRAM
 	
-	jp .game_loop
+	jp game_loop
 
 VBLANK_WAIT:
 	ld hl, vblank_period
@@ -158,6 +143,7 @@ DMA_IDLE:
 	dec a
 	jr nz, .next
 	ret
+
 DMA_IDLE_END:
 
 DMA_COPY_IDLE:
@@ -179,20 +165,11 @@ DMA_COPY_IDLE:
 
 	ret
 
-SECTION "Font", ROM0
+SECTION "Sprites", ROM0
 
-FontTiles:
-INCBIN "font.chr"
-FontTilesEnd:
-
-DAISY_SPRITESHEET:
+BLOB_SPRITESHEET:
 INCBIN "blob.2bpp"
-DAISY_SPRITESHEET_END:
-
-Section "Hello World string", ROM0
-
-HelloWorldStr:
-	db "hello, world",0
+BLOB_SPRITESHEET_END:
 
 SECTION "VBLANK IRQ", ROM0[$40]
 	ld a, $1
@@ -203,7 +180,6 @@ SECTION "Work RAM", WRAM0[$C100]
 OAM_BUFFER: ds 4*40
 vblank_period: ds 1
 blob_frame: ds 1
-
 
 SECTION "DMA Idle Process", HRAM[$FF80]
 DMA_IDLE_HRAM:
