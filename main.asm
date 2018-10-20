@@ -2,9 +2,9 @@ INCLUDE "hardware.inc"
 
 SECTION "Header", ROM0[$100]
 
-EntryPoint:
+ENTRYPOINT:
 	di
-	jp start
+	jp START
 
 REPT $150 - $104
 	db 0
@@ -12,22 +12,22 @@ ENDR
 
 SECTION "Game code", ROM0
 
-start:
-	call init
+START:
+	call INIT
 
-	call game_loop
+	call GAME_LOOP
 
-init:
-	call screen_init
+INIT:
+	call SCREEN_INIT
 
 	call DMA_COPY_IDLE
 	call DMA_IDLE_HRAM
 
-	call blob_new
+	call BLOB_NEW
 
 	call screen_start
 
-screen_init:
+SCREEN_INIT:
 .wait
 	; wait for VBlank
 	ld a, [rLY]
@@ -68,17 +68,25 @@ screen_start:
 
 	ret
 
-blob_new:
-	ld a, 24
+BLOB_NEW:
+	ld a, 16
 	ld [OAM_BUFFER], a
 
-	ld a, 32
+	ld a, 16
 	ld [OAM_BUFFER+1], a
 
 	ld a, 0
+	ld [blob_clip], a
 	ld [blob_frame], a
+	ld [blob_ticks], a
 
-	ld hl, $8000
+	ld hl, blob_dance_down
+	ld a, h
+	ld [blob_animation], a
+	ld a, l
+	ld [blob_animation+1], a
+
+	ld hl, $8010
 	ld de, BLOB_SPRITESHEET
 	ld bc, BLOB_SPRITESHEET_END - BLOB_SPRITESHEET
 .next_byte
@@ -94,31 +102,77 @@ blob_new:
 	jr nz, .next_byte
 	ret
 
-game_loop:
-	call VBLANK_WAIT
+GAME_LOOP:
+	call VBLANK_WAIT	
+
+	call DMA_IDLE_HRAM
+
+	call BLOB_DRAW
 	
+	jp GAME_LOOP
+
+; clip = first db
+; ticks -> frame
+; 0 to end
+
+blob_dance_down:
+	db 1, $FF
+	db 0, $FF
+	db 1, $FF
+	db 0, 0
+
+BLOB_DRAW:
+.set_clip
+	ld a, [blob_clip]
+	cp a, 0
+	jr nz, .get_offset
+	; have we already set the clip?
+
+	ld hl, blob_dance_down
+	ld a, [hl]
+	ld [blob_clip], a
+	; get the clip, the first line of the animation
+
+.get_offset
 	ld a, [blob_frame]
 	inc a
 	ld [blob_frame], a
+	; increment frame counter
 
-	cp a, 15
-	jr nz, game_loop
+	ld hl, blob_dance_down
+	sla a
+	add a, l
+	ld l, a
+	; get the frame data from the animation
+
+	ld a, [hli]
+	ld [blob_steps+1], a
+	ld b, a
+	; get offset
+
+	ld a, [hl]
+	; load interval
+
+	cp a, b
+	jr nz, .set_oam
+	; is the frame and ticks is zero?
 
 	xor a
 	ld [blob_frame], a
+	ld [blob_ticks], a
+	jr .get_offset
+	; then reset the frame and start again
 
-	ld a, [OAM_BUFFER]
-	add 4
-	ld [OAM_BUFFER], a
+.set_oam
 
-	
-	ld a, [OAM_BUFFER+2]
-	xor a, %00000001
+	ld a, [blob_clip]
+	add a, b
+
+	; add the tile clip to the offset
 	ld [OAM_BUFFER+2], a
+	; update the tile
 
-	call DMA_IDLE_HRAM
-	
-	jp game_loop
+	ret
 
 VBLANK_WAIT:
 	ld hl, vblank_period
@@ -179,7 +233,12 @@ SECTION "VBLANK IRQ", ROM0[$40]
 SECTION "Work RAM", WRAM0[$C100]
 OAM_BUFFER: ds 4*40
 vblank_period: ds 1
+
+blob_animation: ds 2
+blob_clip: ds 1
 blob_frame: ds 1
+blob_ticks: ds 1
+blob_steps: ds 10
 
 SECTION "DMA Idle Process", HRAM[$FF80]
 DMA_IDLE_HRAM:
