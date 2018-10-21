@@ -131,6 +131,26 @@ FETCH_ANIMATION: MACRO
 
 	ENDM
 
+; b <- offset, c <- interval
+GET_OFFSET_AND_INTERVAL: MACRO
+	FETCH_ANIMATION
+
+	ld a, [blob_frame]
+	sla a
+	add a, l
+	ld l, a
+	; get the frame data from the animation
+
+	ld a, [hli]
+	ld b, a
+	; get offset
+
+	ld a, [hl]
+	ld c, a
+	; load interval
+
+	ENDM
+
 BLOB_DRAW:
 .set_clip
 	ld a, [blob_clip]
@@ -149,7 +169,7 @@ BLOB_DRAW:
 	; initialise the frame
 
 .set_frame
-	call GET_OFFSET_AND_INTERVAL
+	GET_OFFSET_AND_INTERVAL
 
 	ld a, [blob_interval]
 	inc a
@@ -173,26 +193,6 @@ BLOB_DRAW:
 
 	ret
 
-; b <- offset, c <- interval
-GET_OFFSET_AND_INTERVAL:
-	FETCH_ANIMATION
-
-	ld a, [blob_frame]
-	sla a
-	add a, l
-	ld l, a
-	; get the frame data from the animation
-
-	ld a, [hli]
-	ld b, a
-	; get offset
-
-	ld a, [hl]
-	ld c, a
-	; load interval
-
-	ret
-
 ; increments the frame, if it's at the end of the animation it loops it
 INC_FRAME:
 	xor a
@@ -204,7 +204,7 @@ INC_FRAME:
 	ld [blob_frame], a
 	; if so advance the frame
 
-	call GET_OFFSET_AND_INTERVAL
+	GET_OFFSET_AND_INTERVAL
 
 	ld a, c
 	cp a, b
@@ -215,7 +215,7 @@ INC_FRAME:
 	ld [blob_frame], a
 	; back to frame one
 	
-	call GET_OFFSET_AND_INTERVAL
+	GET_OFFSET_AND_INTERVAL
 
 .return
 	ret
