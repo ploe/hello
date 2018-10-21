@@ -78,7 +78,7 @@ BLOB_NEW:
 	ld a, 0
 	ld [blob_clip], a
 	ld [blob_frame], a
-	ld [blob_ticks], a
+	ld [blob_interval], a
 
 	ld hl, blob_dance_down
 	ld a, h
@@ -112,20 +112,20 @@ GAME_LOOP:
 	jp GAME_LOOP
 
 ; clip = first db
-; ticks -> frame
+; interval -> frame
 ; 0 to end
 
 blob_dance_down:
-	db 1, $FF
-	db 0, $FF
-	db 1, $FF
+	db 1, 0
+	db 0, 15
+	db 1, 15
 	db 0, 0
 
 BLOB_DRAW:
 .set_clip
 	ld a, [blob_clip]
 	cp a, 0
-	jr nz, .get_offset
+	jr nz, .set_frame
 	; have we already set the clip?
 
 	ld hl, blob_dance_down
@@ -133,11 +133,38 @@ BLOB_DRAW:
 	ld [blob_clip], a
 	; get the clip, the first line of the animation
 
-.get_offset
-	ld a, [blob_frame]
-	inc a
+	ld a, 1
 	ld [blob_frame], a
-	; increment frame counter
+	; initialise the frame
+
+.set_frame
+	call GET_OFFSET_AND_INTERVAL
+
+	ld a, [blob_interval]
+	inc a
+	ld [blob_interval], a
+	; increment the animation interval
+
+	cp a, c
+	jr nz, .set_oam
+	; has our interval elapsed?
+
+	call INC_FRAME
+	; then we increment the frame
+
+.set_oam
+	ld a, [blob_clip]
+	add a, b
+	; add the tile clip to the offset
+
+	ld [OAM_BUFFER+2], a
+	; update the tile
+
+	ret
+
+; b <- offset, c <- interval
+GET_OFFSET_AND_INTERVAL:
+	ld a, [blob_frame]
 
 	ld hl, blob_dance_down
 	sla a
@@ -151,27 +178,37 @@ BLOB_DRAW:
 	; get offset
 
 	ld a, [hl]
+	ld [blob_steps+2], a
+	ld c, a
 	; load interval
 
-	cp a, b
-	jr nz, .set_oam
-	; is the frame and ticks is zero?
+	ret
 
+; increments the frame, if it's at the end of the animation it loops it
+INC_FRAME:
 	xor a
+	ld [blob_interval], a
+	; reset the interval
+
+	ld a, [blob_frame]
+	inc a
 	ld [blob_frame], a
-	ld [blob_ticks], a
-	jr .get_offset
-	; then reset the frame and start again
+	; if so advance the frame
 
-.set_oam
+	call GET_OFFSET_AND_INTERVAL
 
-	ld a, [blob_clip]
-	add a, b
+	ld a, c
+	cp a, b
+	jr nz, .return
+	; is the frame and interval is zero?
 
-	; add the tile clip to the offset
-	ld [OAM_BUFFER+2], a
-	; update the tile
+	ld a, 1
+	ld [blob_frame], a
+	; back to frame one
+	
+	call GET_OFFSET_AND_INTERVAL
 
+.return
 	ret
 
 VBLANK_WAIT:
@@ -237,7 +274,7 @@ vblank_period: ds 1
 blob_animation: ds 2
 blob_clip: ds 1
 blob_frame: ds 1
-blob_ticks: ds 1
+blob_interval: ds 1
 blob_steps: ds 10
 
 SECTION "DMA Idle Process", HRAM[$FF80]
