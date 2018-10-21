@@ -121,6 +121,16 @@ blob_dance_down:
 	db 1, 15
 	db 0, 0
 
+; load hl with a pointer to the animation
+FETCH_ANIMATION: MACRO
+	ld a, [blob_animation]
+	ld h, a
+
+	ld a, [blob_animation+1]
+	ld l, a
+
+	ENDM
+
 BLOB_DRAW:
 .set_clip
 	ld a, [blob_clip]
@@ -128,7 +138,8 @@ BLOB_DRAW:
 	jr nz, .set_frame
 	; have we already set the clip?
 
-	ld hl, blob_dance_down
+	FETCH_ANIMATION
+
 	ld a, [hl]
 	ld [blob_clip], a
 	; get the clip, the first line of the animation
@@ -164,21 +175,19 @@ BLOB_DRAW:
 
 ; b <- offset, c <- interval
 GET_OFFSET_AND_INTERVAL:
-	ld a, [blob_frame]
+	FETCH_ANIMATION
 
-	ld hl, blob_dance_down
+	ld a, [blob_frame]
 	sla a
 	add a, l
 	ld l, a
 	; get the frame data from the animation
 
 	ld a, [hli]
-	ld [blob_steps+1], a
 	ld b, a
 	; get offset
 
 	ld a, [hl]
-	ld [blob_steps+2], a
 	ld c, a
 	; load interval
 
