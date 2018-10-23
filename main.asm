@@ -160,12 +160,12 @@ JOYPAD_GET:
 	; a is now loaded with the joypad state
 
 	ld b, a
-	ld a, [joypad_down]
+	ld a, [joypad_buttons]
 	cpl
 	and b
 	ld [joypad_pressed], a
 	ld a, b
-	ld [joypad_down], a
+	ld [joypad_buttons], a
 
 	ret
 
@@ -223,7 +223,7 @@ BLOB_DRAW:
 	; initialise the frame
 
 .set_frame
-	ld a, [joypad_down]
+	ld a, [joypad_buttons]
 	and JOYPAD_DOWN
 	cp a, 0
 	jr nz, .animoot
@@ -328,8 +328,8 @@ SECTION "VBLANK IRQ", ROM0[$40]
 SECTION "Work RAM", WRAM0[$C100]
 OAM_BUFFER: ds 4*40
 
+joypad_buttons: ds 1
 joypad_pressed: ds 1
-joypad_down: ds 1
 vblank_period: ds 1
 
 blob_animation: ds 2
