@@ -12,7 +12,7 @@ ENDR
 
 SECTION "Game code", ROM0
 
-; args dst, source, size
+; args dst, src, size
 MEMCPY: MACRO
 	ld hl, \1
 	ld de, \2
@@ -288,24 +288,29 @@ VBLANK_WAIT:
 .wait
 	halt
 	nop
-	nop
+	; halt until interrupt
 
 	ld a, 0
 	cp [hl]
 	jr z, .wait
+	; was it a vblank interrupt?
 
 	ld [hl], a
 	ret
+	; if so, we can run the next frame's stuff
 
+; this is the routine that transfers from the WRAM Buffer to OAM 
 DMA_IDLE:
-	ld a, $C1
+	ld a, HIGH(OAM_BUFFER)
 	ld [rDMA], a
+	; set DMA transfer off
 
 	ld a, $28
 .next
 	dec a
 	jr nz, .next
 	ret
+	; wait until the transfer has finished
 
 DMA_IDLE_END:
 
