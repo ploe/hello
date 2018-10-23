@@ -25,7 +25,7 @@ INIT:
 
 	call BLOB_NEW
 
-	call screen_start
+	call SCREEN_START
 
 SCREEN_INIT:
 .wait
@@ -54,13 +54,12 @@ SCREEN_INIT:
 	ld [rNR52], a
 
 	; turn screen on, show background
-	ld a, %10000011
+	ld a, LCDCF_ON + LCDCF_OBJON + LCDCF_BGON
 	ld [rLCDC], a
 
 	ret
 
-screen_start:
-
+SCREEN_START:
 	ld a, IEF_VBLANK
 	ld [rIE], a
 
@@ -107,6 +106,8 @@ GAME_LOOP:
 
 	call DMA_IDLE_HRAM
 
+	call JOYPAD_GET
+
 	call BLOB_DRAW
 	
 	jp GAME_LOOP
@@ -114,6 +115,51 @@ GAME_LOOP:
 ; clip = first db
 ; interval -> frame
 ; 0 to end
+
+JOYPAD_STATE EQU %00001111
+JOYPAD_DOWN EQU %10000000
+
+JOYPAD_GET:
+	ld a, P1F_5
+	ld [rP1], a
+	; set to read d-pad (Right, Left, Up, Down)
+
+	ld a, [rP1]
+	ld a, [rP1]
+	; read twice, as the state can bounce
+
+	cpl
+	and JOYPAD_STATE
+	swap a
+	ld b, a
+	; stick the DPAD in b
+
+	ld a, P1F_4
+	ld [rP1], a
+	; set to read the buttons (A, B, Select, Start)
+	
+	ld a, [rP1]
+	ld a, [rP1]
+	ld a, [rP1]
+	ld a, [rP1]
+	ld a, [rP1]
+	ld a, [rP1]
+	; read six times, as the state can bounce
+
+	cpl
+	and JOYPAD_STATE
+	or b
+	; a is now loaded with the joypad state
+
+	ld b, a
+	ld a, [joypad_down]
+	cpl
+	and b
+	ld [joypad_pressed], a
+	ld a, b
+	ld [joypad_down], a
+
+	ret
 
 blob_dance_down:
 	db 1, 0
@@ -169,6 +215,15 @@ BLOB_DRAW:
 	; initialise the frame
 
 .set_frame
+	ld a, [joypad_down]
+	and JOYPAD_DOWN
+	cp a, 0
+	jr nz, .animoot
+
+	ld b, 0
+	jr .set_oam
+
+.animoot
 	GET_OFFSET_AND_INTERVAL
 
 	ld a, [blob_interval]
@@ -278,6 +333,9 @@ SECTION "VBLANK IRQ", ROM0[$40]
 
 SECTION "Work RAM", WRAM0[$C100]
 OAM_BUFFER: ds 4*40
+
+joypad_pressed: ds 1
+joypad_down: ds 1
 vblank_period: ds 1
 
 blob_animation: ds 2
