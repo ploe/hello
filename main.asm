@@ -205,6 +205,20 @@ GET_OFFSET_AND_INTERVAL: MACRO
 
 	ENDM
 
+JOYPAD_BUTTON_IS_DOWN: MACRO
+	ld a, [joypad_buttons]
+	and \1
+	cp a, 0
+
+	ENDM
+
+JOYPAD_BUTTON_IS_PRESSED:
+	ld a, [joypad_pressed]
+	and \1
+	cp a, 0
+
+	ENDM
+
 BLOB_DRAW:
 .set_clip
 	ld a, [blob_clip]
@@ -223,9 +237,8 @@ BLOB_DRAW:
 	; initialise the frame
 
 .set_frame
-	ld a, [joypad_buttons]
-	and JOYPAD_DOWN
-	cp a, 0
+
+	JOYPAD_BUTTON_IS_DOWN JOYPAD_DOWN
 	jr nz, .animoot
 
 	ld b, 0
