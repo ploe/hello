@@ -12,16 +12,32 @@ ENDR
 
 SECTION "Game code", ROM0
 
+; args dst, source, size
+MEMCPY: MACRO
+	ld hl, \1
+	ld de, \2
+	ld bc, \3
+
+.next_byte\@
+	ld a, [de]
+	ld [hli], a
+	inc de
+	dec bc
+	; copy byte and increment counters
+
+	ld a, b
+	or c
+	jr nz, .next_byte\@
+	; loop if count is non-zero
+
+	ENDM
+
 START:
 	call INIT
-
 	call GAME_LOOP
 
 INIT:
 	call SCREEN_INIT
-
-	call DMA_COPY_IDLE
-	call DMA_IDLE_HRAM
 
 	call BLOB_NEW
 
@@ -29,33 +45,37 @@ INIT:
 
 SCREEN_INIT:
 .wait
-	; wait for VBlank
 	ld a, [rLY]
 	cp 144
 	jr c, .wait
+	; wait for vblank
 
-	; turn off LCDC	
 	xor a
 	ld [rLCDC], a
+	; turn off LCDC	
 
-	; init background pallete
 	ld a, %11100100
 	ld [rBGP], a
+	; init background palette
 
 	ld a, %11010000
 	ld [rOBP0], a
+	; set object palette
 
-	; set screen offset
 	xor a
 	ld [rSCX], a
 	ld [rSCY], a
+	; set screen offset
 
-	; turn off the sound
 	ld [rNR52], a
+	; turn off the sound
 
-	; turn screen on, show background
+	MEMCPY DMA_IDLE_HRAM, DMA_IDLE, DMA_IDLE_END-DMA_IDLE
+	; copy the DMA_IDLE routine to HRAM
+
 	ld a, LCDCF_ON + LCDCF_OBJON + LCDCF_BGON
 	ld [rLCDC], a
+	; turn screen on, show background
 
 	ret
 
@@ -85,20 +105,8 @@ BLOB_NEW:
 	ld a, l
 	ld [blob_animation+1], a
 
-	ld hl, $8010
-	ld de, BLOB_SPRITESHEET
-	ld bc, BLOB_SPRITESHEET_END - BLOB_SPRITESHEET
-.next_byte
-	; copy byte and increment counters
-	ld a, [de]
-	ld [hli], a
-	inc de
-	dec bc
-	
-	; loop if count is non-zero
-	ld a, b
-	or c
-	jr nz, .next_byte
+	MEMCPY $8010, BLOB_SPRITESHEET, BLOB_SPRITESHEET_END-BLOB_SPRITESHEET
+
 	ret
 
 GAME_LOOP:
@@ -300,25 +308,6 @@ DMA_IDLE:
 	ret
 
 DMA_IDLE_END:
-
-DMA_COPY_IDLE:
-	ld hl, DMA_IDLE_HRAM	; dst
-	ld de, DMA_IDLE	; iterator 
-	ld bc, DMA_IDLE_END - DMA_IDLE
-
-.next
-	; copy byte and increment counters
-	ld a, [de]
-	ld [hli], a
-	inc de
-	dec bc
-	
-	; loop if count is non-zero
-	ld a, b
-	or c
-	jr nz, .next
-
-	ret
 
 SECTION "Sprites", ROM0
 
