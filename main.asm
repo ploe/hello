@@ -171,8 +171,8 @@ JOYPAD_GET:
 
 blob_dance_down:
 	db 1, 0
-	db 0, 15
 	db 1, 15
+	db 0, 15
 	db 0, 0
 
 ; load hl with a pointer to the animation
@@ -212,7 +212,7 @@ JOYPAD_BUTTON_IS_DOWN: MACRO
 
 	ENDM
 
-JOYPAD_BUTTON_IS_PRESSED:
+JOYPAD_BUTTON_IS_PRESSED: MACRO
 	ld a, [joypad_pressed]
 	and \1
 	cp a, 0
@@ -245,6 +245,10 @@ BLOB_DRAW:
 	jr .set_oam
 
 .animoot
+	ld a, [OAM_BUFFER]
+	add 1
+	ld [OAM_BUFFER], a
+
 	GET_OFFSET_AND_INTERVAL
 
 	ld a, [blob_interval]
