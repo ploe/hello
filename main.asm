@@ -32,6 +32,30 @@ MEMCPY: MACRO
 
 	ENDM
 
+JOYPAD_DOWN EQU %10000000
+JOYPAD_UP EQU %01000000
+JOYPAD_LEFT EQU %00100000
+JOYPAD_RIGHT EQU %00010000
+JOYPAD_DPAD EQU %11110000
+
+JOYPAD_BTN_DOWN: MACRO
+	ld a, [joypad_buttons]
+	and \1
+
+	ENDM
+
+JOYPAD_BTN_PRESSED: MACRO
+	ld a, [joypad_pressed]
+	and \1
+
+	ENDM
+
+JOYPAD_ANY_DPAD: MACRO
+	ld a, [joypad_buttons]
+	and JOYPAD_DPAD
+
+	ENDM
+
 START:
 	call INIT
 	call GAME_LOOP
@@ -109,6 +133,38 @@ BLOB_NEW:
 
 	ret
 
+BLOB_DOWN EQU 1
+BLOB_RIGHT EQU 3
+BLOB_UP EQU 5
+
+THEN_SET_FACE: MACRO
+	jr z, .return\@
+
+	ld a, \2
+	ld [\1], a
+
+	ld a, \4
+	ld [\3], a
+		
+.return\@
+	ENDM
+
+BLOB_SET_FACE:
+	JOYPAD_BTN_DOWN JOYPAD_DOWN
+	THEN_SET_FACE blob_clip, BLOB_DOWN, OAM_BUFFER+3, 0
+
+	JOYPAD_BTN_DOWN JOYPAD_UP
+	THEN_SET_FACE blob_clip, BLOB_UP, OAM_BUFFER+3, 0
+
+	JOYPAD_BTN_DOWN JOYPAD_RIGHT
+	THEN_SET_FACE blob_clip, BLOB_RIGHT, OAM_BUFFER+3, 0
+
+	JOYPAD_BTN_DOWN JOYPAD_LEFT
+	THEN_SET_FACE blob_clip, BLOB_RIGHT, OAM_BUFFER+3, OAMF_XFLIP
+	; right face, but flipped on the x axis
+
+	ret
+
 GAME_LOOP:
 	call VBLANK_WAIT	
 
@@ -116,6 +172,7 @@ GAME_LOOP:
 
 	call JOYPAD_GET
 
+	call BLOB_SET_FACE
 	call BLOB_DRAW
 	
 	jp GAME_LOOP
@@ -125,8 +182,6 @@ GAME_LOOP:
 ; 0 to end
 
 JOYPAD_STATE EQU %00001111
-JOYPAD_DOWN EQU %10000000
-
 JOYPAD_GET:
 	ld a, P1F_5
 	ld [rP1], a
@@ -205,19 +260,6 @@ GET_OFFSET_AND_INTERVAL: MACRO
 
 	ENDM
 
-JOYPAD_BUTTON_IS_DOWN: MACRO
-	ld a, [joypad_buttons]
-	and \1
-	cp a, 0
-
-	ENDM
-
-JOYPAD_BUTTON_IS_PRESSED: MACRO
-	ld a, [joypad_pressed]
-	and \1
-	cp a, 0
-
-	ENDM
 
 BLOB_DRAW:
 .set_clip
@@ -237,18 +279,6 @@ BLOB_DRAW:
 	; initialise the frame
 
 .set_frame
-
-	JOYPAD_BUTTON_IS_DOWN JOYPAD_DOWN
-	jr nz, .animoot
-
-	ld b, 0
-	jr .set_oam
-
-.animoot
-	ld a, [OAM_BUFFER]
-	add 1
-	ld [OAM_BUFFER], a
-
 	GET_OFFSET_AND_INTERVAL
 
 	ld a, [blob_interval]
