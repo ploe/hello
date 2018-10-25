@@ -64,6 +64,24 @@ BLOB_SET_FACE:
 	THEN_SET_FACE blob_clip, BLOB_RIGHT, OAM_BUFFER+3, OAMF_XFLIP
 	; right face, but flipped on the x axis
 
+	JOYPAD_ANY_DPAD
+	jr z, .still
+	ld hl, blob_dance
+
+	jr .return
+.still
+	ld hl, blob_still
+	ld a, 0
+	ld [blob_interval], a
+	ld [blob_frame], a
+
+.return
+	ld a, h
+	ld [blob_animation], a
+
+	ld a, l
+	ld [blob_animation+1], a
+
 	ret
 
 ; increments the frame, if it's at the end of the animation it loops it
@@ -93,9 +111,13 @@ INC_FRAME:
 .return
 	ret
 
-blob_dance_down:
+blob_dance:
 	db 1, 15
 	db 0, 15
+	db 0, 0
+
+blob_still:
+	db 0, $FF
 	db 0, 0
 
 BLOB_DRAW:
@@ -138,7 +160,7 @@ BLOB_NEW:
 	ld [blob_frame], a
 	ld [blob_interval], a
 
-	ld hl, blob_dance_down
+	ld hl, blob_dance
 	ld a, h
 	ld [blob_animation], a
 	ld a, l
