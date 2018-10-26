@@ -54,18 +54,18 @@ SCREEN_START:
 ; 0 to end
 
 SCREEN_WAIT:
-	ld hl, screen_waiting
 .wait
 	halt
 	nop
 	; halt until interrupt
 
-	ld a, 0
-	cp [hl]
-	jr z, .wait
+	ld a, [screen_waiting]
+	cp a, 0
+	jr nz, .wait
 	; was it a vblank interrupt?
 
-	ld [hl], a
+	ld a, 1
+	ld [screen_waiting], a
 	ret
 	; if so, we can run the next frame's stuff
 
@@ -84,7 +84,7 @@ DMA_IDLE:
 DMA_IDLE_END:
 
 SECTION "VBLANK IRQ", ROM0[$40]
-	ld a, $1
+	ld a, 0
 	ld [screen_waiting], a
 	reti
 
