@@ -47,23 +47,6 @@ GAME_LOOP:
 	
 	jp GAME_LOOP
 
-
-SECTION "Sprites", ROM0
-
-SECTION "Work RAM", WRAM0[$C000]
-EXPORT OAM_BUFFER
-OAM_BUFFER: ds 4*40
-
-joypad_buttons: ds 1
-joypad_pressed: ds 1
-EXPORT screen_waiting
-screen_waiting: ds 1
-
-blob_animation: ds 2
-blob_clip: ds 1
-blob_frame: ds 1
-blob_interval: ds 1
-
 SECTION "VRAM Tile Data", VRAM[$8000]
 EXPORT VRAM_TILES
 VRAM_TILES:
