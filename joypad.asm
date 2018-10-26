@@ -1,29 +1,5 @@
-	IF !DEF(JOYPAD_INC)
-JOYPAD_INC SET 1
-
-JOYPAD_DOWN EQU %10000000
-JOYPAD_UP EQU %01000000
-JOYPAD_LEFT EQU %00100000
-JOYPAD_RIGHT EQU %00010000
-JOYPAD_DPAD EQU %11110000
-
-JOYPAD_BTN_DOWN: MACRO
-	ld a, [joypad_buttons]
-	and \1
-
-	ENDM
-
-JOYPAD_BTN_PRESSED: MACRO
-	ld a, [joypad_pressed]
-	and \1
-
-	ENDM
-
-JOYPAD_ANY_DPAD: MACRO
-	ld a, [joypad_buttons]
-	and JOYPAD_DPAD
-
-	ENDM
+INCLUDE "hardware.inc"
+INCLUDE "joypad.inc"
 
 SECTION "Joypad Routines", ROM0
 JOYPAD_STATE EQU %00001111
@@ -68,5 +44,3 @@ JOYPAD_GET:
 	ld [joypad_buttons], a
 
 	ret
-
-ENDC ;JOYPAD_INC

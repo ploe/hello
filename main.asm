@@ -3,7 +3,7 @@ INCLUDE "hardware.inc"
 
 ; hardware abstractions
 INCLUDE "memory.asm"
-INCLUDE "joypad.asm"
+INCLUDE "joypad.inc"
 
 ; game logic
 INCLUDE "blob.asm"

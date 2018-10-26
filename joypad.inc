@@ -1,0 +1,34 @@
+	IF !DEF(JOYPAD_INC)
+JOYPAD_INC SET 1
+
+JOYPAD_DOWN EQU %10000000
+JOYPAD_UP EQU %01000000
+JOYPAD_LEFT EQU %00100000
+JOYPAD_RIGHT EQU %00010000
+JOYPAD_DPAD EQU %11110000
+
+; Defined in joypad.asm
+GLOBAL JOYPAD_GET
+
+; Defined in WRAM0
+GLOBAL joypad_buttons, joypad_pressed
+
+JOYPAD_BTN_DOWN: MACRO
+	ld a, [joypad_buttons]
+	and \1
+
+	ENDM
+
+JOYPAD_BTN_PRESSED: MACRO
+	ld a, [joypad_pressed]
+	and \1
+
+	ENDM
+
+JOYPAD_ANY_DPAD: MACRO
+	ld a, [joypad_buttons]
+	and JOYPAD_DPAD
+
+	ENDM
+
+ENDC
