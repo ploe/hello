@@ -17,6 +17,7 @@ fix:
 
 gfx:
 	rgbgfx -u -o blob.2bpp ./png/blob.png
+	rgbgfx -u -o stick.2bpp ./png/stick.png
 
 link:
 	rgblink -o hello-world.gb blob.o joypad.o main.o screen.o wram0.o
