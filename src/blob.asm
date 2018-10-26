@@ -1,4 +1,3 @@
-
 	IF !DEF(BLOB_INC)
 BLOB_INC SET 1
 INCLUDE "joypad.inc"

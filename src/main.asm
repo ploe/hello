@@ -2,11 +2,11 @@
 INCLUDE "hardware.inc"
 
 ; hardware abstractions
-INCLUDE "memory.asm"
+INCLUDE "memlib.inc"
 INCLUDE "joypad.inc"
 
 ; game logic
-INCLUDE "blob.asm"
+INCLUDE "./src/blob.asm"
 
 SECTION "Header", ROM0[$100]
 
