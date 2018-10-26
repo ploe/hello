@@ -6,7 +6,7 @@ INCLUDE "memlib.inc"
 INCLUDE "joypad.inc"
 
 ; game logic
-INCLUDE "./src/blob.asm"
+INCLUDE "blob.inc"
 
 SECTION "Header", ROM0[$100]
 
@@ -124,16 +124,13 @@ DMA_IDLE_END:
 
 SECTION "Sprites", ROM0
 
-BLOB_SPRITESHEET:
-INCBIN "blob.2bpp"
-BLOB_SPRITESHEET_END:
-
 SECTION "VBLANK IRQ", ROM0[$40]
 	ld a, $1
 	ld [vblank_period], a
 	reti
 
 SECTION "Work RAM", WRAM0[$C000]
+EXPORT OAM_BUFFER
 OAM_BUFFER: ds 4*40
 
 joypad_buttons: ds 1
@@ -144,6 +141,10 @@ blob_animation: ds 2
 blob_clip: ds 1
 blob_frame: ds 1
 blob_interval: ds 1
+
+SECTION "VRAM Tile Data", VRAM[$8000]
+EXPORT VRAM_TILES
+VRAM_TILES:
 
 SECTION "DMA Idle Process", HRAM[$FF80]
 DMA_IDLE_HRAM:

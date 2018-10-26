@@ -1,10 +1,13 @@
-	IF !DEF(BLOB_INC)
-BLOB_INC SET 1
-INCLUDE "joypad.inc"
+INCLUDE "hardware.inc"
 
-BLOB_DOWN EQU 1
-BLOB_RIGHT EQU 3
-BLOB_UP EQU 5
+INCLUDE "joypad.inc"
+INCLUDE "memlib.inc"
+
+INCLUDE "blob.inc"
+
+BLOB_DOWN EQU 0
+BLOB_RIGHT EQU 2
+BLOB_UP EQU 4
 
 THEN_SET_FACE: MACRO
 	jr z, .return\@
@@ -17,7 +20,6 @@ THEN_SET_FACE: MACRO
 		
 .return\@
 	ENDM
-
 
 ; load hl with a pointer to the animation
 FETCH_ANIMATION: MACRO
@@ -147,6 +149,10 @@ BLOB_DRAW:
 
 	ret
 
+BLOB_SPRITESHEET:
+INCBIN "blob.2bpp"
+BLOB_SPRITESHEET_END:
+
 BLOB_NEW:
 	ld a, 16
 	ld [OAM_BUFFER], a
@@ -167,8 +173,6 @@ BLOB_NEW:
 	ld a, l
 	ld [blob_animation+1], a
 
-	MEMCPY $8010, BLOB_SPRITESHEET, BLOB_SPRITESHEET_END-BLOB_SPRITESHEET
+	MEMCPY VRAM_TILES, BLOB_SPRITESHEET, BLOB_SPRITESHEET_END-BLOB_SPRITESHEET
 
 	ret
-
-ENDC
