@@ -6,6 +6,7 @@ asm:
 	$(assemble) -o main.o ./src/main.asm
 	$(assemble) -o joypad.o ./src/joypad.asm
 	$(assemble) -o blob.o ./src/blob.asm
+	$(assemble) -o screen.o ./src/screen.asm
 
 clean:
 	rm -v *.o *.2bpp
@@ -17,4 +18,4 @@ gfx:
 	rgbgfx -u -o blob.2bpp ./png/blob.png
 
 link:
-	rgblink -o hello-world.gb blob.o joypad.o main.o
+	rgblink -o hello-world.gb blob.o joypad.o main.o screen.o
