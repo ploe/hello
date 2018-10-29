@@ -1,8 +1,4 @@
-; Gameboy definitions
-INCLUDE "hardware.inc"
-
 ; hardware abstractions
-INCLUDE "memlib.inc"
 INCLUDE "screen.inc"
 INCLUDE "joypad.inc"
 
@@ -10,7 +6,6 @@ INCLUDE "joypad.inc"
 INCLUDE "blob.inc"
 
 SECTION "Header", ROM0[$100]
-
 ENTRYPOINT:
 	di
 	jp START
@@ -46,10 +41,6 @@ GAME_LOOP:
 	call BLOB_DRAW
 	
 	jp GAME_LOOP
-
-SECTION "VRAM Tile Data", VRAM[$8000]
-EXPORT VRAM_TILES
-VRAM_TILES:
 
 SECTION "DMA Idle Process", HRAM[$FF80]
 EXPORT DMA_IDLE_HRAM
