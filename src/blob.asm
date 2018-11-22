@@ -87,6 +87,41 @@ BLOB_SET_FACE:
 
 	ret
 
+BLOB_UPDATE:
+.down
+	JOYPAD_BTN_DOWN JOYPAD_DOWN
+	jr z, .up
+	ld a, [blob_y]
+	inc a
+	ld [blob_y], a
+.up
+	JOYPAD_BTN_DOWN JOYPAD_UP
+	jr z, .right
+	ld a, [blob_y]
+	dec a
+	ld [blob_y], a
+.right
+	JOYPAD_BTN_DOWN JOYPAD_RIGHT
+	jr z, .left
+	ld a, [blob_x]
+	inc a
+	ld [blob_x], a
+.left
+	JOYPAD_BTN_DOWN JOYPAD_LEFT
+	jr z, .return
+	ld a, [blob_x]
+	dec a
+	ld [blob_x], a
+
+.return
+	ld a, [blob_y]
+	ld [OAM_BUFFER], a
+
+	ld a, [blob_x]
+	ld [OAM_BUFFER+1], a
+
+	ret
+
 ; increments the frame, if it's at the end of the animation it loops it
 INC_FRAME:
 	xor a

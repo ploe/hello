@@ -36,6 +36,7 @@ GAME_LOOP:
 
 	call JOYPAD_GET
 
+	call BLOB_UPDATE
 	call BLOB_SET_FACE
 	call BLOB_DRAW
 	
