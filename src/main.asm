@@ -1,9 +1,5 @@
 ; hardware abstractions
-INCLUDE "screen.inc"
 INCLUDE "joypad.inc"
-
-; game logic
-INCLUDE "blob.inc"
 
 SECTION "Header", ROM0[$100]
 ENTRYPOINT:

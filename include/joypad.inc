@@ -7,12 +7,6 @@ JOYPAD_LEFT EQU %00100000
 JOYPAD_RIGHT EQU %00010000
 JOYPAD_DPAD EQU %11110000
 
-; Defined in joypad.asm
-GLOBAL JOYPAD_GET
-
-; Defined in WRAM0
-GLOBAL joypad_buttons, joypad_pressed
-
 JOYPAD_BTN_DOWN: MACRO
 	ld a, [joypad_buttons]
 	and \1

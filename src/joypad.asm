@@ -3,7 +3,7 @@ INCLUDE "joypad.inc"
 
 SECTION "Joypad Routines", ROM0
 JOYPAD_STATE EQU %00001111
-JOYPAD_GET:
+JOYPAD_GET::
 	ld a, P1F_5
 	ld [rP1], a
 	; set to read d-pad (Right, Left, Up, Down)

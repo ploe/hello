@@ -1,11 +1,10 @@
 INCLUDE "hardware.inc"
 
 INCLUDE "memlib.inc"
-INCLUDE "screen.inc"
 
 SECTION "Screen Setup Routines", ROM0
 
-SCREEN_INIT:
+SCREEN_INIT::
 .wait
 	ld a, [rLY]
 	cp 144
@@ -37,7 +36,7 @@ SCREEN_INIT:
 
 	ret
 
-SCREEN_START:
+SCREEN_START::
 	ld a, LCDCF_ON | LCDCF_OBJON | LCDCF_BGON
 	ld [rLCDC], a
 	; turn screen on, show background
@@ -53,7 +52,7 @@ SCREEN_START:
 ; interval -> frame
 ; 0 to end
 
-SCREEN_WAIT:
+SCREEN_WAIT::
 .wait
 	halt
 	; halt until interrupt
