@@ -1,8 +1,9 @@
 INCLUDE "hardware.inc"
-
 INCLUDE "memlib.inc"
 
 SECTION "Screen Setup Routines", ROM0
+
+
 
 SCREEN_INIT::
 .wait
@@ -13,7 +14,11 @@ SCREEN_INIT::
 
 	xor a
 	ld [rLCDC], a
-	; turn off LCDC	
+	; turn off LCDC
+
+	MEMSET _VRAM, 0, $9FFF-$8000
+	MEMSET _RAM, 0, $DFFF-$C000
+	MEMSET _OAMRAM, 0, $FE9F-$FE00
 
 	ld a, %11100100
 	ld [rBGP], a
