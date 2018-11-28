@@ -8,19 +8,19 @@ JOYPAD_RIGHT EQU %00010000
 JOYPAD_DPAD EQU %11110000
 
 JOYPAD_BTN_DOWN: MACRO
-	ld a, [joypad_buttons]
+	ld a, [JoypadButtons]
 	and \1
 
 	ENDM
 
 JOYPAD_BTN_PRESSED: MACRO
-	ld a, [joypad_pressed]
+	ld a, [JoypadPressed]
 	and \1
 
 	ENDM
 
 JOYPAD_ANY_DPAD: MACRO
-	ld a, [joypad_buttons]
+	ld a, [JoypadButtons]
 	and JOYPAD_DPAD
 
 	ENDM

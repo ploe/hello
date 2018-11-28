@@ -20,7 +20,7 @@ START:
 GAME_LOOP:
 	call SCREEN_WAIT	
 
-	call JOYPAD_GET
+	call JoypadGet
 
 	call BLOB_UPDATE
 	call BLOB_SET_FACE

@@ -1,9 +1,13 @@
 INCLUDE "hardware.inc"
 INCLUDE "joypad.inc"
 
+SECTION "JOYPAD WRAM", WRAM0
+JoypadButtons:: ds 1
+JoypadPressed:: ds 1
+
 SECTION "Joypad Routines", ROM0
 JOYPAD_STATE EQU %00001111
-JOYPAD_GET::
+JoypadGet::
 	ld a, P1F_5
 	ld [rP1], a
 	; set to read d-pad (Right, Left, Up, Down)
@@ -36,11 +40,11 @@ JOYPAD_GET::
 	; a is now loaded with the joypad state
 
 	ld b, a
-	ld a, [joypad_buttons]
+	ld a, [JoypadButtons]
 	cpl
 	and b
-	ld [joypad_pressed], a
+	ld [JoypadPressed], a
 	ld a, b
-	ld [joypad_buttons], a
+	ld [JoypadButtons], a
 
 	ret
