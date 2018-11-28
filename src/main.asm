@@ -14,7 +14,7 @@ SECTION "Game code", ROM0
 
 START:
 	call SCREEN_INIT
-	call BLOB_NEW
+	call BlobNew
 	call SCREEN_START
 
 GAME_LOOP:
@@ -22,9 +22,8 @@ GAME_LOOP:
 
 	call JoypadGet
 
-	call BLOB_UPDATE
-	call BLOB_SET_FACE
-	call BLOB_DRAW
+	call BlobUpdate
+	call BlobDraw
 	
 	call DMA_IDLE_HRAM
 

@@ -3,6 +3,16 @@ INCLUDE "hardware.inc"
 INCLUDE "joypad.inc"
 INCLUDE "memlib.inc"
 
+SECTION "BLOB WRAM", WRAM0
+BlobX: ds 1
+BlobY: ds 1
+BlobAnimation: ds 2
+BlobClip: ds 1
+BlobFrame: ds 1
+BlobInterval: ds 1
+
+SECTION "Blob Routines", ROM0
+
 BLOB_DOWN EQU 0
 BLOB_RIGHT EQU 2
 BLOB_UP EQU 4
@@ -21,10 +31,10 @@ THEN_SET_FACE: MACRO
 
 ; load hl with a pointer to the animation
 FETCH_ANIMATION: MACRO
-	ld a, [blob_animation]
+	ld a, [BlobAnimation]
 	ld h, a
 
-	ld a, [blob_animation+1]
+	ld a, [BlobAnimation+1]
 	ld l, a
 
 	ENDM
@@ -33,7 +43,7 @@ FETCH_ANIMATION: MACRO
 GET_OFFSET_AND_INTERVAL: MACRO
 	FETCH_ANIMATION
 
-	ld a, [blob_frame]
+	ld a, [BlobFrame]
 	add a, a
 	add a, l
 	ld l, a
@@ -49,73 +59,71 @@ GET_OFFSET_AND_INTERVAL: MACRO
 
 	ENDM
 
-SECTION "Blob Routines", ROM0
-
-BLOB_SET_FACE::
+BlobSetFace::
 	JOYPAD_BTN_DOWN JOYPAD_DOWN
-	THEN_SET_FACE blob_clip, BLOB_DOWN, OAM_BUFFER+3, 0
+	THEN_SET_FACE BlobClip, BLOB_DOWN, OAM_BUFFER+3, 0
 
 	JOYPAD_BTN_DOWN JOYPAD_UP
-	THEN_SET_FACE blob_clip, BLOB_UP, OAM_BUFFER+3, 0
+	THEN_SET_FACE BlobClip, BLOB_UP, OAM_BUFFER+3, 0
 
 	JOYPAD_BTN_DOWN JOYPAD_RIGHT
-	THEN_SET_FACE blob_clip, BLOB_RIGHT, OAM_BUFFER+3, 0
+	THEN_SET_FACE BlobClip, BLOB_RIGHT, OAM_BUFFER+3, 0
 
 	JOYPAD_BTN_DOWN JOYPAD_LEFT
-	THEN_SET_FACE blob_clip, BLOB_RIGHT, OAM_BUFFER+3, OAMF_XFLIP
+	THEN_SET_FACE BlobClip, BLOB_RIGHT, OAM_BUFFER+3, OAMF_XFLIP
 	; right face, but flipped on the x axis
 
 	JOYPAD_ANY_DPAD
 	jr z, .still
-	ld hl, blob_dance
+	ld hl, BlobDance
 
 	jr .return
 .still
-	ld hl, blob_still
+	ld hl, BlobStill
 	xor a
-	ld [blob_interval], a
-	ld [blob_frame], a
+	ld [BlobInterval], a
+	ld [BlobFrame], a
 
 .return
 	ld a, h
-	ld [blob_animation], a
+	ld [BlobAnimation], a
 
 	ld a, l
-	ld [blob_animation+1], a
+	ld [BlobAnimation+1], a
 
 	ret
 
-BLOB_UPDATE::
+BlobUpdate::
 .down
 	JOYPAD_BTN_DOWN JOYPAD_DOWN
 	jr z, .up
-	ld a, [blob_y]
+	ld a, [BlobY]
 	inc a
-	ld [blob_y], a
+	ld [BlobY], a
 .up
 	JOYPAD_BTN_DOWN JOYPAD_UP
 	jr z, .right
-	ld a, [blob_y]
+	ld a, [BlobY]
 	dec a
-	ld [blob_y], a
+	ld [BlobY], a
 .right
 	JOYPAD_BTN_DOWN JOYPAD_RIGHT
 	jr z, .left
-	ld a, [blob_x]
+	ld a, [BlobX]
 	inc a
-	ld [blob_x], a
+	ld [BlobX], a
 .left
 	JOYPAD_BTN_DOWN JOYPAD_LEFT
 	jr z, .return
-	ld a, [blob_x]
+	ld a, [BlobX]
 	dec a
-	ld [blob_x], a
+	ld [BlobX], a
 
 .return
-	ld a, [blob_y]
+	ld a, [BlobY]
 	ld [OAM_BUFFER], a
 
-	ld a, [blob_x]
+	ld a, [BlobX]
 	ld [OAM_BUFFER+1], a
 
 	ret
@@ -123,12 +131,12 @@ BLOB_UPDATE::
 ; increments the frame, if it's at the end of the animation it loops it
 INC_FRAME:
 	xor a
-	ld [blob_interval], a
+	ld [BlobInterval], a
 	; reset the interval
 
-	ld a, [blob_frame]
+	ld a, [BlobFrame]
 	inc a
-	ld [blob_frame], a
+	ld [BlobFrame], a
 	; if so advance the frame
 
 	GET_OFFSET_AND_INTERVAL
@@ -139,7 +147,7 @@ INC_FRAME:
 	; is the frame and interval is zero?
 
 	xor a
-	ld [blob_frame], a
+	ld [BlobFrame], a
 	; back to frame one
 	
 	GET_OFFSET_AND_INTERVAL
@@ -147,22 +155,23 @@ INC_FRAME:
 .return
 	ret
 
-blob_dance:
+BlobDance:
 	db 1, 15
 	db 0, 15
 	db 0, 0
 
-blob_still:
+BlobStill:
 	db 0, $FF
 	db 0, 0
 
-BLOB_DRAW::
+BlobDraw::
+	call BlobSetFace ; get clip
 .set_frame
 	GET_OFFSET_AND_INTERVAL
 
-	ld a, [blob_interval]
+	ld a, [BlobInterval]
 	inc a
-	ld [blob_interval], a
+	ld [BlobInterval], a
 	; increment the animation interval
 
 	cp a, c
@@ -173,7 +182,7 @@ BLOB_DRAW::
 	; then we increment the frame
 
 .set_oam
-	ld a, [blob_clip]
+	ld a, [BlobClip]
 	add a, b
 	; add the tile clip to the offset
 
@@ -182,17 +191,17 @@ BLOB_DRAW::
 
 	ret
 
-BLOB_SPRITESHEET:
+BlobSheet:
 INCBIN "blob.2bpp"
-BLOB_SPRITESHEET_END:
-BLOB_SPRITESHEET_SIZE EQU BLOB_SPRITESHEET_END-BLOB_SPRITESHEET
+BlobSheetEnd:
+BLOB_SHEET_SIZE EQU BlobSheetEnd-BlobSheet
 
-STICK_SPRITESHEET:
+STICK_SHEET:
 INCBIN "stick.2bpp"
-STICK_SPRITESHEET_END:
-STICK_SPRITESHEET_SIZE EQU STICK_SPRITESHEET_END-STICK_SPRITESHEET
+STICK_SHEET_END:
+STICK_SHEET_SIZE EQU STICK_SHEET_END-STICK_SHEET
 
-BLOB_NEW::
+BlobNew::
 	ld a, 16
 	ld [OAM_BUFFER], a
 
@@ -200,19 +209,19 @@ BLOB_NEW::
 	ld [OAM_BUFFER+1], a
 
 	ld a, BLOB_DOWN
-	ld [blob_clip], a
+	ld [BlobClip], a
 
 	xor a
-	ld [blob_frame], a
-	ld [blob_interval], a
+	ld [BlobFrame], a
+	ld [BlobInterval], a
 
-	ld hl, blob_dance
+	ld hl, BlobDance
 	ld a, h
-	ld [blob_animation], a
+	ld [BlobAnimation], a
 	ld a, l
-	ld [blob_animation+1], a
+	ld [BlobAnimation+1], a
 
-	MEMCPY VRAM_TILES, BLOB_SPRITESHEET, BLOB_SPRITESHEET_SIZE
-	MEMCPY VRAM_TILES + BLOB_SPRITESHEET_SIZE, STICK_SPRITESHEET, STICK_SPRITESHEET_SIZE
+	MEMCPY _VRAM, BlobSheet, BLOB_SHEET_SIZE
+	MEMCPY VRAM_TILES + BLOB_SHEET_SIZE, STICK_SHEET, STICK_SHEET_SIZE
 
 	ret
