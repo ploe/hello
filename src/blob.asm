@@ -36,7 +36,7 @@ GET_OFFSET_AND_INTERVAL: MACRO
 	FETCH_ANIMATION
 
 	ld a, [blob_frame]
-	sla a
+	add a, a
 	add a, l
 	ld l, a
 	; get the frame data from the animation
@@ -74,7 +74,7 @@ BLOB_SET_FACE:
 	jr .return
 .still
 	ld hl, blob_still
-	ld a, 0
+	xor a
 	ld [blob_interval], a
 	ld [blob_frame], a
 
@@ -140,7 +140,7 @@ INC_FRAME:
 	jr nz, .return
 	; is the frame and interval is zero?
 
-	ld a, 0
+	xor a
 	ld [blob_frame], a
 	; back to frame one
 	
@@ -204,7 +204,7 @@ BLOB_NEW:
 	ld a, BLOB_DOWN
 	ld [blob_clip], a
 
-	ld a, 0
+	xor a
 	ld [blob_frame], a
 	ld [blob_interval], a
 

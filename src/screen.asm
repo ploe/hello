@@ -35,13 +35,13 @@ SCREEN_INIT:
 	MEMCPY DMA_IDLE_HRAM, DMA_IDLE, DMA_IDLE_END-DMA_IDLE
 	; copy the DMA_IDLE routine to HRAM
 
-	ld a, LCDCF_ON + LCDCF_OBJON + LCDCF_BGON
-	ld [rLCDC], a
-	; turn screen on, show background
-
 	ret
 
 SCREEN_START:
+	ld a, LCDCF_ON | LCDCF_OBJON | LCDCF_BGON
+	ld [rLCDC], a
+	; turn screen on, show background
+
 	ld a, IEF_VBLANK
 	ld [rIE], a
 
@@ -56,11 +56,10 @@ SCREEN_START:
 SCREEN_WAIT:
 .wait
 	halt
-	nop
 	; halt until interrupt
 
 	ld a, [screen_waiting]
-	cp a, 0
+	and a
 	jr nz, .wait
 	; was it a vblank interrupt?
 
@@ -84,7 +83,8 @@ DMA_IDLE:
 DMA_IDLE_END:
 
 SECTION "VBLANK IRQ", ROM0[$40]
-	ld a, 0
+	xor a
 	ld [screen_waiting], a
+
 	reti
 

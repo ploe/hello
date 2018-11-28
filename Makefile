@@ -22,4 +22,4 @@ gfx:
 	rgbgfx -u -o stick.2bpp ./png/stick.png
 
 link:
-	rgblink -o hello-world.gb blob.o hram.o joypad.o main.o screen.o vram.o wram0.o
+	rgblink -n hello-world.sym -o hello-world.gb blob.o hram.o joypad.o main.o screen.o vram.o wram0.o
