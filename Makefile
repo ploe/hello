@@ -16,7 +16,7 @@ clean:
 	rm -v *.o *.2bpp
 
 fix:
-	rgbfix -v -p 0 -m 0x10 hello-world.gb
+	rgbfix -v -p 0 -m 0x10 -n 0x06 -r 0x03 hello-world.gb
 
 gfx:
 	rgbgfx -u -o blob.2bpp ./png/blob.png

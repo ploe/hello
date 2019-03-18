@@ -18,7 +18,7 @@ RoleSize EQU RoleEnd-RoleStart
 
 ds RoleSize * RolesLength
 
-RoleBound:: ds 2
+RoleBound:: ds 1
 
 ActorsLength EQU 10 - 1
 ActorsTop:
@@ -65,22 +65,30 @@ RoleNew::
 ; hl[bc] = de
 RoleSetMethodSub::
 	push hl
+
 	add hl, bc
 	ld a, d
 	ld [hli], a
 	ld a, e
 	ld [hl], a
+
 	pop hl
 	ret
 
+
 MonsterMove::
+	ret
 MonsterDraw::
+	ret
 MonsterAI::
+	ret
 
 SampleRole::
 	call RoleNew
 
-	RoleSetMethod RoleDraw,MonsterDraw
-	;RoleSetMethod RoleAI,MonsterAI
+	RoleSetMethod RoleMove, MonsterMove
+	RoleSetMethod RoleDraw, MonsterDraw
+	RoleSetMethod RoleAI, MonsterAI
 
 	call RoleDone
+	ret

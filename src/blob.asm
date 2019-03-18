@@ -4,6 +4,7 @@ INCLUDE "joypad.inc"
 INCLUDE "memlib.inc"
 
 SECTION "BLOB WRAM", WRAM0
+; Blob members
 BlobX: ds 1
 BlobY: ds 1
 BlobAnimation: ds 2
@@ -12,6 +13,8 @@ BlobFrame: ds 1
 BlobInterval: ds 1
 
 SECTION "Blob Routines", ROM0
+
+; Blob Constants
 
 BLOB_DOWN EQU 0
 BLOB_RIGHT EQU 2
