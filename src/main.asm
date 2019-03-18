@@ -16,6 +16,7 @@ START:
 	call SCREEN_INIT
 	call BlobNew
 	call SCREEN_START
+	call SampleRole
 
 GAME_LOOP:
 	call SCREEN_WAIT	
